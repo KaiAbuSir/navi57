@@ -10,6 +10,7 @@
 #include <QtGui/QMenu>
 #include <QtGui/QFileDialog> 
 #include <QtGui/QMessageBox> 
+#include <QtGui/QStatusBar>
 
 #include <QtGui/QGraphicsPolygonItem>
 
@@ -70,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     connect(cellZoomInAct,  SIGNAL(triggered()), naviWgt, SLOT(zoomIn()));
     connect(cellZoomOutAct, SIGNAL(triggered()), naviWgt, SLOT(zoomOut()));
 
+    connect(naviWgt, SIGNAL(progressMessage(const QString &)), statusBar(),SLOT(showMessage(const QString &)));
+
     //**** inits ****
     //** set old size - rem: maybe screen has changed **
     QSettings mySettings(ORG_SETTING_NAME, APP_SETTING_NAME);
@@ -108,11 +111,23 @@ void MainWindow::onAbout()
 ****************************************************************************** */
 void MainWindow::onOpenS57Cell()
 {
+
     QStringList cellList = QFileDialog::getOpenFileNames(this, tr("Selecte one or more S-57 Cells"), QString(), tr("S-57 Cells (*.000);; All Files (*.*)"));
     if (cellList.isEmpty()) return;
-    
-    naviWgt->loadCharts(cellList);
-
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    try
+    {
+        naviWgt->loadCharts(cellList);
+    }
+    catch(const QString & msg)
+    {
+        QMessageBox::warning(this, "Error", msg);
+    }
+    catch(...)
+    {
+        QMessageBox::warning(this, "Error", "Unknown exception while loading charts");
+    }
+    QApplication::restoreOverrideCursor();
 }
 
 

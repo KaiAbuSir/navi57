@@ -5,6 +5,8 @@
 TARGET = navi57
 TEMPLATE = app
 
+CONFIG += console
+
 INCLUDEPATH += incl
 INCLUDEPATH += ../EncLib/incl
 
