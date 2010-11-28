@@ -20,7 +20,11 @@
 namespace Enc
 {
     class NaviWidget;
-    
+    class ChartProjectionComboBox;
+    class ChartScaleWidget;
+    class ChartPositionWidget;
+    class ChartEastNorthWidget;
+    class ChartRotationWidget;
 }
 
 class MainWindow : public QMainWindow
@@ -31,16 +35,26 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-protected slots:
+private slots:
+
+    void createMenues();
+    void createNaviDocWgts();
 
     void onAboutQt();
     void onAbout();
    
     void onOpenS57Cell();
    
-protected:
+private:
 
     Enc::NaviWidget * naviWgt;
+
+    Enc::ChartProjectionComboBox * projectWgt;
+    Enc::ChartScaleWidget * scaleWgt;
+    Enc::ChartPositionWidget * posWgt;
+    Enc::ChartEastNorthWidget * xyWgt;
+    Enc::ChartRotationWidget * rotWgt;
+
 };
 
 

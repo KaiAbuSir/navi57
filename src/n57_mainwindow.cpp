@@ -1,7 +1,9 @@
 #include <QtCore/QAbstractItemModel>
 #include <QtCore/QSettings>
 #include <QtGui/QApplication>
+#include <QtGui/QWidget>
 #include <QtGui/QDesktopWidget>
+#include <QtGui/QDockWidget>
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QLabel>
@@ -23,6 +25,7 @@
 #include "boundingbox_degrees.h"
 #include "geo_projections.h"
 #include <naviWidget.h>
+#include <naviNaviWidgets.h>
 
 using namespace Enc;
 using namespace Navi57;
@@ -32,46 +35,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
     setWindowTitle(QString("%1 %2").arg(APP_DIALOG_NAME).arg(APP_VERSION));
 
-    //**** The Menue actions ****
-    QAction * cellOpenAct = new QAction(tr("&Open S-57 Cells..."), this);
-
-    QAction * cellZoomInAct = new QAction(tr("Zoom in..."), this);
-    QAction * cellZoomOutAct = new QAction(tr("zoom out..."), this);
-
-
-    //**** The Menues ****
-    QMenu * fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(cellOpenAct);
-
-    QMenu * viewMenu = menuBar()->addMenu(tr("&View"));
-    viewMenu->addAction(cellZoomInAct);
-    viewMenu->addAction(cellZoomOutAct);
-
-    QMenu * optMenu = menuBar()->addMenu(tr("&Options"));
-
-    QMenu * hlpMenu = menuBar()->addMenu(tr("&Help"));
-    QAction * aboutAct = hlpMenu->addAction(QString("About ") +APP_DIALOG_NAME, this, SLOT(onAbout()));
-    QAction * aboutQtAct = hlpMenu->addAction("About Qt", this, SLOT(onAboutQt()));
-
     //****** Central widget and Layout ******
     QWidget * centralWgt = new QWidget(this); 
     setCentralWidget(centralWgt);
     QVBoxLayout * mainLyt = new QVBoxLayout(centralWgt);
  
-//##########################################################################
+    //**** most important Members: scene and view ****
     naviWgt = new NaviWidget(centralWgt);
     mainLyt->addWidget(naviWgt);
     
-//##########################################################################
-
-
-
-    //**** connections ****
-    connect(cellOpenAct, SIGNAL(triggered()), this, SLOT(onOpenS57Cell()));
-    connect(cellZoomInAct,  SIGNAL(triggered()), naviWgt, SLOT(zoomIn()));
-    connect(cellZoomOutAct, SIGNAL(triggered()), naviWgt, SLOT(zoomOut()));
-
-    connect(naviWgt, SIGNAL(progressMessage(const QString &)), statusBar(),SLOT(showMessage(const QString &)));
+    createMenues();
+    createNaviDocWgts();
 
     //**** inits ****
     //** set old size - rem: maybe screen has changed **
@@ -95,6 +69,99 @@ MainWindow::~MainWindow()
     mySettings.setValue("mainwindow/size", size());
     mySettings.setValue("mainwindow/fullScreen", isMaximized());
 }
+
+//*****************************************************************************
+/// Create the Menues and coressponding Actions, and connect them
+/*!
+****************************************************************************** */
+void MainWindow::createMenues()
+{
+    //**** The Menue actions ****
+    QAction * cellOpenAct = new QAction(tr("&Open S-57 Cells..."), this);
+
+    QAction * cellZoomInAct = new QAction(tr("Zoom in..."), this);
+    QAction * cellZoomOutAct = new QAction(tr("zoom out..."), this);
+
+    //**** The Menues ****
+    QMenu * fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(cellOpenAct);
+
+    QMenu * viewMenu = menuBar()->addMenu(tr("&View"));
+    viewMenu->addAction(cellZoomInAct);
+    viewMenu->addAction(cellZoomOutAct);
+
+    QMenu * optMenu = menuBar()->addMenu(tr("&Options"));
+
+    QMenu * hlpMenu = menuBar()->addMenu(tr("&Help"));
+    QAction * aboutAct = hlpMenu->addAction(QString("About ") +APP_DIALOG_NAME, this, SLOT(onAbout()));
+    QAction * aboutQtAct = hlpMenu->addAction("About Qt", this, SLOT(onAboutQt()));
+
+     //**** connections ****
+    connect(cellOpenAct, SIGNAL(triggered()), this, SLOT(onOpenS57Cell()));
+    connect(cellZoomInAct,  SIGNAL(triggered()), naviWgt, SLOT(zoomIn()));
+    connect(cellZoomOutAct, SIGNAL(triggered()), naviWgt, SLOT(zoomOut()));
+    connect(naviWgt, SIGNAL(progressMessage(const QString &)), statusBar(),SLOT(showMessage(const QString &)));
+}
+
+//*****************************************************************************
+/// Create the Dock-widgets and coressponding Actions, and connect them
+/*!
+****************************************************************************** */
+void MainWindow::createNaviDocWgts()
+{
+    //**** first, create the widgets itself ****
+    projectWgt = new ChartProjectionComboBox();
+    scaleWgt = new ChartScaleWidget();
+    posWgt = new ChartPositionWidget();
+    xyWgt = new ChartEastNorthWidget();
+    rotWgt = new ChartRotationWidget();
+
+    //** inits **
+    for (int prI=0; prI < ProjectionCount; ++prI) projectWgt->addItem(Projections[prI]); // initProjections
+
+    //** Widget Signals are just forwarded with same-name Scene Signals **
+    connect(projectWgt, SIGNAL(currentIndexChanged(int)), naviWgt, SLOT(projectionChanged(int)));
+    connect(scaleWgt,  SIGNAL(zoomIn()), naviWgt, SLOT(zoomIn()));
+    connect(scaleWgt, SIGNAL(zoomOut()), naviWgt, SLOT(zoomOut()));
+    connect(rotWgt, SIGNAL(chartHeading(double)), naviWgt, SLOT(setChartHeading(double)));
+
+    //**** turn the navi-widgets into dok-widgets ****
+    setDockOptions(QMainWindow::AnimatedDocks);
+    QDockWidget::DockWidgetFeatures features = QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable;
+
+    QDockWidget *projectDockWidget = new QDockWidget(tr("Projection"), this);
+    projectDockWidget->setFeatures(features);
+    projectDockWidget->setWidget(projectWgt);
+    //projectDockWidget->setFixedHeight(projectDockWidget->sizeHint().height());
+    addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
+
+    QDockWidget * scaleDockWidget = new QDockWidget(tr("Scale"), this);
+    scaleDockWidget->setFeatures(features);
+    scaleDockWidget->setWidget(scaleWgt);
+    //scaleDockWidget->setFixedHeight(scaleDockWidget->sizeHint().height());
+    addDockWidget(Qt::RightDockWidgetArea, scaleDockWidget);
+
+    QDockWidget *posDockWidget = new QDockWidget(tr("Naut. Position"), this);
+    posDockWidget->setFeatures(features);
+    posDockWidget->setWidget(posWgt);
+    //posDockWidget->setFixedHeight(posDockWidget->sizeHint().height());
+    addDockWidget(Qt::RightDockWidgetArea, posDockWidget);
+
+    QDockWidget *xyDockWidget = new QDockWidget(tr("x- y- Position"), this);
+    xyDockWidget->setFeatures(features);
+    xyDockWidget->setWidget(xyWgt);
+    addDockWidget(Qt::RightDockWidgetArea, xyDockWidget);
+
+    QDockWidget *rotateDockWidget = new QDockWidget(tr("Heading"), this);
+    rotateDockWidget->setFeatures(features);
+    rotateDockWidget->setWidget(rotWgt);
+    addDockWidget(Qt::RightDockWidgetArea, rotateDockWidget);
+}
+
+//*****************************************************************************
+/// As usual: About ... slots
+/*!
+****************************************************************************** */
 void MainWindow::onAboutQt()
 {
     QMessageBox::aboutQt(this, APP_DIALOG_NAME);
@@ -106,7 +173,7 @@ void MainWindow::onAbout()
 }
 
 //*****************************************************************************
-/// 
+/// Open and display S-57 cells
 /*!
 ****************************************************************************** */
 void MainWindow::onOpenS57Cell()
