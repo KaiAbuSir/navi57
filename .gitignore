@@ -1,4 +1,10 @@
 navi57.pro.user
+navi57.ncb
+navi57.sln
+navi57.suo
+navi57.vcproj
+release/
+debug/
 moc_debug/
 moc_release/
 navi57/

@@ -117,7 +117,6 @@ void MainWindow::createNaviDocWgts()
     posWgt = new ChartPositionWidget();
     xyWgt = new ChartEastNorthWidget();
 
-
     //** inits **
     for (int prI=0; prI < ProjectionCount; ++prI) projectWgt->addItem(Projections[prI]); // initProjections
 
@@ -137,13 +136,12 @@ void MainWindow::createNaviDocWgts()
     QDockWidget *projectDockWidget = new QDockWidget(tr("Projection"), this);
     projectDockWidget->setFeatures(features);
     projectDockWidget->setWidget(projectWgt);
-    //projectDockWidget->setFixedHeight(projectDockWidget->sizeHint().height());
+    //projectDockWidget->setFixedHeight(projectDockWidget->sizeHint().height()); //bad idea, child widget should have fixed hight
     addDockWidget(Qt::RightDockWidgetArea, projectDockWidget);
 
     QDockWidget * scaleDockWidget = new QDockWidget(tr("Scale"), this);
     scaleDockWidget->setFeatures(features);
     scaleDockWidget->setWidget(scaleWgt);
-    //scaleDockWidget->setFixedHeight(scaleDockWidget->sizeHint().height());
     addDockWidget(Qt::RightDockWidgetArea, scaleDockWidget);
 
     QDockWidget *rotateDockWidget = new QDockWidget(tr("Heading"), this);
@@ -154,7 +152,6 @@ void MainWindow::createNaviDocWgts()
     QDockWidget *posDockWidget = new QDockWidget(tr("Naut. Position"), this);
     posDockWidget->setFeatures(features);
     posDockWidget->setWidget(posWgt);
-    //posDockWidget->setFixedHeight(posDockWidget->sizeHint().height());
     addDockWidget(Qt::RightDockWidgetArea, posDockWidget);
 
     QDockWidget *xyDockWidget = new QDockWidget(tr("x- y- Position"), this);

@@ -28,6 +28,8 @@ CONFIG(debug, debug|release){
   LIBS += -LD:../geographiclib-1.1/windows/Debug
   message("Building debug")
 }
+    #just for Visual Studio to find the Qt-dlls
+    LIBS += -LC:\Qt\4.7.1.vc2008\lib
 }
 unix {
     CONFIG(release, debug|release){
