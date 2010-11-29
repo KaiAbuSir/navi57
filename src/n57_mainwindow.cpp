@@ -112,18 +112,23 @@ void MainWindow::createNaviDocWgts()
     //**** first, create the widgets itself ****
     projectWgt = new ChartProjectionComboBox();
     scaleWgt = new ChartScaleWidget();
+    rotWgt = new ChartRotationWidget();
+
     posWgt = new ChartPositionWidget();
     xyWgt = new ChartEastNorthWidget();
-    rotWgt = new ChartRotationWidget();
+
 
     //** inits **
     for (int prI=0; prI < ProjectionCount; ++prI) projectWgt->addItem(Projections[prI]); // initProjections
 
     //** Widget Signals are just forwarded with same-name Scene Signals **
-    connect(projectWgt, SIGNAL(currentIndexChanged(int)), naviWgt, SLOT(projectionChanged(int)));
+    connect(projectWgt, SIGNAL(currentIndexChanged(int)), naviWgt, SLOT(onProjectionChanged(int)));
     connect(scaleWgt,  SIGNAL(zoomIn()), naviWgt, SLOT(zoomIn()));
     connect(scaleWgt, SIGNAL(zoomOut()), naviWgt, SLOT(zoomOut()));
     connect(rotWgt, SIGNAL(chartHeading(double)), naviWgt, SLOT(setChartHeading(double)));
+
+    connect(naviWgt, SIGNAL(scaleChanged(double)), scaleWgt, SLOT(setScale(double)));
+    connect(naviWgt, SIGNAL(headingChanged(double)), rotWgt, SLOT(setHeading(double)));
 
     //**** turn the navi-widgets into dok-widgets ****
     setDockOptions(QMainWindow::AnimatedDocks);
@@ -141,6 +146,11 @@ void MainWindow::createNaviDocWgts()
     //scaleDockWidget->setFixedHeight(scaleDockWidget->sizeHint().height());
     addDockWidget(Qt::RightDockWidgetArea, scaleDockWidget);
 
+    QDockWidget *rotateDockWidget = new QDockWidget(tr("Heading"), this);
+    rotateDockWidget->setFeatures(features);
+    rotateDockWidget->setWidget(rotWgt);
+    addDockWidget(Qt::RightDockWidgetArea, rotateDockWidget);
+
     QDockWidget *posDockWidget = new QDockWidget(tr("Naut. Position"), this);
     posDockWidget->setFeatures(features);
     posDockWidget->setWidget(posWgt);
@@ -151,11 +161,6 @@ void MainWindow::createNaviDocWgts()
     xyDockWidget->setFeatures(features);
     xyDockWidget->setWidget(xyWgt);
     addDockWidget(Qt::RightDockWidgetArea, xyDockWidget);
-
-    QDockWidget *rotateDockWidget = new QDockWidget(tr("Heading"), this);
-    rotateDockWidget->setFeatures(features);
-    rotateDockWidget->setWidget(rotWgt);
-    addDockWidget(Qt::RightDockWidgetArea, rotateDockWidget);
 }
 
 //*****************************************************************************
@@ -169,6 +174,14 @@ void MainWindow::onAboutQt()
 
 void MainWindow::onAbout()
 {
+    QString aboutText = QString(Navi57::APP_DIALOG_NAME) + "\nVersion: " +QString(Navi57::APP_VERSION) +"\n\n";
+
+    QFile aboutFile(":/resources/about.txt");
+    if (aboutFile.open(QIODevice::ReadOnly))
+    {
+        aboutText += aboutFile.readAll(); //it returns a QByteArray, but QString has a constructor for it :-)
+        aboutFile.close();
+    }
     QMessageBox::about(this, APP_DIALOG_NAME, aboutText);
 }
 

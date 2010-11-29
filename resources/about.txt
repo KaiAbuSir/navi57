@@ -1,0 +1,13 @@
+Until now, this is just a test Application to test my EncLib
+
+Its not usefull for anythink
+
+Maybe it will become a S-57 Chart viewer, one day.
+
+written by:
+
+Kai Neufeldt 
+Manhagener Allee 65
+22926 Ahrensburg 
+
+email: AlMohandis@gmx.net

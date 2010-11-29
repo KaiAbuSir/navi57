@@ -52,3 +52,5 @@ HEADERS  += incl/n57_app.h \
     incl/n57_mainwindow.h\
     incl/n57_texts.incl
 
+RESOURCES += \
+    navi57Qt.qrc
